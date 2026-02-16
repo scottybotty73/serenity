@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { Message, ClinicalProfile, ClinicalNote } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const THERAPIST_SYSTEM_PROMPT = (profile: ClinicalProfile) => `
 You are Serenity, an expert AI Psychotherapist. 
