@@ -28,8 +28,19 @@ export interface ClinicalProfile {
   };
 }
 
+export interface ClinicalNote {
+  id: string;
+  date: string;
+  type: 'Initial' | 'Follow-up' | 'Crisis';
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+  summary: string;
+}
+
 export interface AppState {
-  view: 'DASHBOARD' | 'CHAT' | 'PROFILE' | 'SCHEDULE';
+  view: 'DASHBOARD' | 'CHAT' | 'PROFILE' | 'SCHEDULE' | 'NOTES';
   isAwake: boolean;
   activePatientId: string | null;
 }

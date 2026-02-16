@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { APP_NAME } from './constants';
-import { AppState, Message } from './types';
-import { MOCK_APPOINTMENTS, MOCK_PROFILE, INITIAL_MESSAGES } from './mockData';
+import { AppState, Message, ClinicalProfile, ClinicalNote, Appointment } from './types';
 import { ChatInterface } from './components/ChatInterface';
 import { PatientProfile } from './components/PatientProfile';
+import { ScheduleView } from './components/ScheduleView';
+import { NotesView } from './components/NotesView';
+import { StorageService } from './services/storage';
+import { generateMorningBriefing } from './services/ai';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>({
@@ -12,24 +15,55 @@ const App: React.FC = () => {
     activePatientId: '1'
   });
 
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [profile, setProfile] = useState<ClinicalProfile | null>(null);
+  const [notes, setNotes] = useState<ClinicalNote[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [wakingUp, setWakingUp] = useState(false);
+  const [briefing, setBriefing] = useState<string>("Wake me up to analyze the daily schedule.");
 
-  const handleWakeUp = () => {
+  // Load Data on Mount
+  useEffect(() => {
+    setMessages(StorageService.getMessages());
+    setProfile(StorageService.getProfile());
+    setNotes(StorageService.getNotes());
+    setAppointments(StorageService.getAppointments());
+  }, []);
+
+  const handleWakeUp = async () => {
     setWakingUp(true);
-    // Simulate async wake up routine (DB queries, news reading)
+    
+    // Use AI to generate real briefing based on stored data
+    if (profile) {
+        const aiBriefing = await generateMorningBriefing(appointments, profile);
+        setBriefing(aiBriefing);
+    }
+
     setTimeout(() => {
       setState(prev => ({ ...prev, isAwake: true }));
       setWakingUp(false);
-    }, 2000);
+    }, 1500);
   };
 
   const renderContent = () => {
+    if (!profile) return <div>Loading...</div>;
+
     switch (state.view) {
       case 'CHAT':
-        return <ChatInterface messages={messages} onSendMessage={(msg) => setMessages(prev => [...prev, msg])} />;
+        return (
+            <ChatInterface 
+                messages={messages} 
+                profile={profile}
+                onSendMessage={(msg) => setMessages(prev => [...prev, msg])}
+                onUpdateProfile={(p) => setProfile(p)}
+            />
+        );
       case 'PROFILE':
-        return <PatientProfile profile={MOCK_PROFILE} />;
+        return <PatientProfile profile={profile} />;
+      case 'SCHEDULE':
+        return <ScheduleView />;
+      case 'NOTES':
+        return <NotesView notes={notes} />;
       case 'DASHBOARD':
       default:
         return (
@@ -42,10 +76,8 @@ const App: React.FC = () => {
                   <h2 className="text-3xl font-bold text-slate-100 mb-2">
                     {state.isAwake ? "Online & Monitoring" : "Agent Sleeping"}
                   </h2>
-                  <p className="text-slate-400">
-                    {state.isAwake 
-                      ? "I am currently monitoring 3 active patients and preparing for the 2:00 PM session." 
-                      : "Wake me up to start the daily schedule and process overnight messages."}
+                  <p className="text-slate-400 max-w-xl leading-relaxed">
+                    {briefing}
                   </p>
                 </div>
                 {!state.isAwake ? (
@@ -78,7 +110,7 @@ const App: React.FC = () => {
                 </span>
               </div>
               <div className="space-y-4">
-                {MOCK_APPOINTMENTS.map(apt => (
+                {appointments.slice(0,4).map(apt => (
                   <div key={apt.id} className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-800 hover:border-emerald-500/30 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="text-center min-w-[60px]">
@@ -107,17 +139,23 @@ const App: React.FC = () => {
             <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
               <h3 className="font-semibold text-slate-100 mb-6">Therapist Tools</h3>
               <div className="grid grid-cols-2 gap-4">
-                <button className="p-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-left transition-colors group">
+                <button 
+                    onClick={() => setState(s => ({...s, view: 'NOTES'}))}
+                    className="p-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-left transition-colors group"
+                >
                   <div className="w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <i className="fas fa-book-medical"></i>
                   </div>
                   <span className="text-sm font-medium text-slate-200">Review Notes</span>
                 </button>
-                <button className="p-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-left transition-colors group">
+                <button 
+                    onClick={() => StorageService.clearAll()}
+                    className="p-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-left transition-colors group"
+                >
                   <div className="w-10 h-10 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <i className="fas fa-exclamation-triangle"></i>
+                    <i className="fas fa-trash-alt"></i>
                   </div>
-                  <span className="text-sm font-medium text-slate-200">Crisis Log</span>
+                  <span className="text-sm font-medium text-slate-200">Reset Data</span>
                 </button>
                 <button className="p-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-left transition-colors group">
                   <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -169,19 +207,19 @@ const App: React.FC = () => {
             icon="fa-calendar-alt" 
             label="Schedule" 
           />
+           <NavButton 
+            active={state.view === 'NOTES'} 
+            onClick={() => setState(s => ({...s, view: 'NOTES'}))}
+            icon="fa-file-medical" 
+            label="Clinical Notes" 
+          />
           <div className="pt-4 mt-4 border-t border-slate-800">
             <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Patients</p>
             <NavButton 
                 active={state.view === 'PROFILE'} 
                 onClick={() => setState(s => ({...s, view: 'PROFILE'}))}
                 icon="fa-user-circle" 
-                label="Alex Thompson" 
-            />
-            <NavButton 
-                active={false} 
-                onClick={() => {}}
-                icon="fa-user-circle" 
-                label="Sarah Chen" 
+                label={profile?.name || "Patient"} 
             />
           </div>
         </nav>

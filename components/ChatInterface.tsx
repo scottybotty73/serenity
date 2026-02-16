@@ -1,15 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Message } from '../types';
-import { generateTherapistResponse } from '../services/ai';
+import { Message, ClinicalProfile } from '../types';
+import { generateTherapistResponse, updateProfileFromSession, generateSOAPNote } from '../services/ai';
+import { StorageService } from '../services/storage';
 
 interface ChatInterfaceProps {
   messages: Message[];
+  profile: ClinicalProfile;
   onSendMessage: (msg: Message) => void;
+  onUpdateProfile: (profile: ClinicalProfile) => void;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, profile, onSendMessage, onUpdateProfile }) => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -19,6 +23,30 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMe
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  const handleEndSession = async () => {
+    if (!confirm("End session and generate clinical notes?")) return;
+    
+    setIsProcessing(true);
+    try {
+        // 1. Generate SOAP Note
+        const note = await generateSOAPNote(messages);
+        if (note) {
+            StorageService.addNote(note);
+            alert("Session ended. Clinical note generated successfully.");
+        }
+        
+        // 2. Update Profile
+        const updatedProfile = await updateProfileFromSession(profile, messages);
+        onUpdateProfile(updatedProfile);
+        StorageService.saveProfile(updatedProfile);
+        
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setIsProcessing(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -31,11 +59,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMe
     };
 
     onSendMessage(userMsg);
+    StorageService.addMessage(userMsg);
     setInput('');
     setIsTyping(true);
 
     try {
-      const responseText = await generateTherapistResponse(messages, input);
+      const responseText = await generateTherapistResponse(messages.concat(userMsg), input, profile);
       
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -45,6 +74,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMe
       };
       
       onSendMessage(aiMsg);
+      StorageService.addMessage(aiMsg);
     } catch (error) {
       console.error("Failed to get response", error);
     } finally {
@@ -53,7 +83,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMe
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-140px)] bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden relative">
+      {isProcessing && (
+        <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center flex-col">
+            <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-emerald-400 font-medium">Analyzing session & updating clinical records...</p>
+        </div>
+      )}
+
       {/* Chat Header */}
       <div className="p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
         <div className="flex items-center gap-3">
@@ -65,11 +102,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMe
           </div>
           <div>
             <h3 className="font-semibold text-slate-100">Serenity AI</h3>
-            <p className="text-xs text-slate-400">In Session • Secure & Encrypted</p>
+            <p className="text-xs text-slate-400">In Session • {profile.name}</p>
           </div>
         </div>
-        <button className="text-slate-400 hover:text-red-400 transition-colors" title="End Session">
-          <i className="fas fa-phone-slash"></i>
+        <button 
+            onClick={handleEndSession}
+            className="text-slate-400 hover:text-red-400 transition-colors flex items-center gap-2 text-sm px-3 py-1 rounded hover:bg-red-500/10" 
+            title="End Session & Generate Notes"
+        >
+          <i className="fas fa-file-medical"></i> End Session
         </button>
       </div>
 
@@ -84,7 +125,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMe
             }`}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
               <span className="text-[10px] opacity-50 mt-2 block">
-                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           </div>
@@ -104,9 +145,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMe
       {/* Input Area */}
       <div className="p-4 bg-slate-800 border-t border-slate-700">
         <div className="flex gap-2">
-          <button className="p-3 text-slate-400 hover:text-emerald-400 transition-colors">
-            <i className="fas fa-microphone"></i>
-          </button>
           <input
             type="text"
             value={input}

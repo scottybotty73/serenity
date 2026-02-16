@@ -3,6 +3,7 @@
 ## 1. Project Initialization & Infrastructure
 - [x] **Project Scaffolding**: Setup React/Next.js folder structure.
 - [x] **UI Component Library**: Tailwind CSS configuration and basic styling.
+- [x] **Component System**: Install Shadcn UI (Card, Button, Badge).
 - [ ] **Database Setup**: Initialize Neon (PostgreSQL) project.
 - [ ] **ORM Configuration**: Setup Drizzle ORM and define schema in code.
 - [ ] **Environment Variables**: Configure `.env` for API_KEY, DATABASE_URL, AUTH_SECRET.
@@ -35,10 +36,10 @@
 ## 5. Frontend Development
 - [x] **Dashboard Layout**: Main sidebar and navigation structure.
 - [x] **Chat Interface**: Bubble UI, typing indicators, input handling.
-- [x] **Patient Profile View**: Display of static clinical data.
+- [x] **Patient Profile View**: Display of static clinical data and **GAD-7 Recharts visualization**.
 - [ ] **Data Binding**: Replace `mockData.ts` with real data fetching (React Server Components).
-- [ ] **Schedule View**: Calendar UI for managing `appointments`.
-- [ ] **Progress Visualization**: Implement Recharts/Chart.js for GAD-7 scores in `PatientProfile`.
+- [x] **Schedule View**: Calendar UI for managing `appointments`.
+- [x] **Progress Visualization**: Implement Recharts/Chart.js for GAD-7 scores in `PatientProfile`.
 
 ## 6. External Integrations
 - [ ] **Telegram Bot**:

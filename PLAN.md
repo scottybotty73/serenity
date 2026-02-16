@@ -9,6 +9,7 @@
 - **Framework:** Next.js 16.1+ (App Router)
 - **Core Library:** React 19 (Latest)
 - **Language:** TypeScript 5.x
+- **UI Library:** Shadcn UI (Radix Primitives + Tailwind CSS)
 - **Hosting:** Vercel (Serverless Functions)
 - **Database:** Neon (Serverless PostgreSQL)
 - **ORM:** Drizzle ORM
@@ -145,6 +146,7 @@ CREATE TABLE appointments (
 - [ ] Setup Next.js 16.1 & Neon DB.
 - [ ] Implement Google Auth.
 - [ ] Integrate Telegram Bot Webhooks.
+- [ ] **Install & Configure Shadcn UI.**
 
 ### Phase 2: The Cognitive Engine
 - [ ] Integrate Gemini 3 Pro via Vercel AI SDK.
