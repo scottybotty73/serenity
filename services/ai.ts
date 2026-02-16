@@ -1,4 +1,4 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { Message, ClinicalProfile, ClinicalNote } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -26,6 +26,7 @@ export const generateTherapistResponse = async (history: Message[], userMessage:
   try {
     const model = 'gemini-3-pro-preview';
     
+    // Format history correctly for the new SDK
     const historyContent = history.map(msg => ({
       role: msg.role,
       parts: [{ text: msg.content }]
@@ -37,12 +38,6 @@ export const generateTherapistResponse = async (history: Message[], userMessage:
       config: {
         systemInstruction: THERAPIST_SYSTEM_PROMPT(profile),
         temperature: 0.7,
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-          },
-        ],
       },
     });
 
@@ -115,7 +110,6 @@ export const updateProfileFromSession = async (currentProfile: ClinicalProfile, 
     });
 
     const updated = JSON.parse(response.text || '{}');
-    // Basic validation to ensure we don't wipe data
     if (updated.name && updated.diagnosis) {
         return updated;
     }
