@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ClinicalProfile } from '../types';
 import { generateTherapistResponse, updateProfileFromSession, generateSOAPNote } from '../services/ai';
-import { StorageService } from '../services/storage';
+import { saveClinicalNote } from '../app/actions';
 
 interface ChatInterfaceProps {
   messages: Message[];
   profile: ClinicalProfile;
-  onSendMessage: (msg: Message) => void;
-  onUpdateProfile: (profile: ClinicalProfile) => void;
+  onSendMessage: (msg: Message) => Promise<void> | void;
+  onUpdateProfile: (profile: ClinicalProfile) => Promise<void> | void;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, profile, onSendMessage, onUpdateProfile }) => {
@@ -32,17 +32,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, profile,
         // 1. Generate SOAP Note
         const note = await generateSOAPNote(messages);
         if (note) {
-            StorageService.addNote(note);
+            await saveClinicalNote(note); // Save to DB
             alert("Session ended. Clinical note generated successfully.");
         }
         
         // 2. Update Profile
         const updatedProfile = await updateProfileFromSession(profile, messages);
-        onUpdateProfile(updatedProfile);
-        StorageService.saveProfile(updatedProfile);
+        await onUpdateProfile(updatedProfile);
         
     } catch (e) {
         console.error(e);
+        alert("Error ending session.");
     } finally {
         setIsProcessing(false);
     }
@@ -58,10 +58,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, profile,
       timestamp: new Date()
     };
 
-    onSendMessage(userMsg);
-    StorageService.addMessage(userMsg);
     setInput('');
     setIsTyping(true);
+    
+    // Save User Message
+    await onSendMessage(userMsg);
 
     try {
       const responseText = await generateTherapistResponse(messages.concat(userMsg), input, profile);
@@ -73,8 +74,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, profile,
         timestamp: new Date()
       };
       
-      onSendMessage(aiMsg);
-      StorageService.addMessage(aiMsg);
+      // Save AI Message
+      await onSendMessage(aiMsg);
     } catch (error) {
       console.error("Failed to get response", error);
     } finally {

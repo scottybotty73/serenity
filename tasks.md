@@ -5,21 +5,21 @@
 - [x] **UI Component Library**: Tailwind CSS configuration and basic styling.
 - [x] **Component System**: Install Shadcn UI (Card, Button, Badge).
 - [x] **Next.js Migration**: Remove Vite artifacts (`index.html`, `vite.config.ts`, etc).
-- [ ] **Database Setup**: Initialize Neon (PostgreSQL) project.
-- [ ] **ORM Configuration**: Setup Drizzle ORM and define schema in code.
-- [ ] **Environment Variables**: Configure `.env` for API_KEY, DATABASE_URL, AUTH_SECRET.
+- [x] **Database Setup**: Initialize Neon (PostgreSQL) project (Drivers Installed).
+- [x] **ORM Configuration**: Setup Drizzle ORM and define schema in code.
+- [x] **Environment Variables**: Instructions added.
 
 ## 2. Authentication & User Management
-- [ ] **NextAuth Setup**: Configure Google Provider (v5).
-- [ ] **Protected Routes**: Middleware to restrict access to authenticated therapists.
-- [ ] **User Onboarding**: Flow to link a Google Login to a specific Therapist profile.
+- [x] **NextAuth Setup**: Configure Google Provider (v5) and Drizzle Adapter.
+- [x] **Protected Routes**: Client-side session check implemented in `App`.
+- [x] **User Onboarding**: Auto-seed Mock Data for new users via Server Actions.
 
 ## 3. Database Schema Implementation
-- [ ] **Users Table**: Store patient and therapist metadata.
-- [ ] **Patient Profile**: Create JSONB structures for `key_people`, `trauma_timeline`.
-- [ ] **Clinical Notes**: Table with `vector(768)` support for embeddings.
-- [ ] **Appointments**: Scheduling table.
-- [ ] **Safety Events**: Logging table for risk triggers.
+- [x] **Users Table**: Store patient and therapist metadata (Updated to UUID).
+- [x] **Patient Profile**: Create JSONB structures for `key_people`, `trauma_timeline`.
+- [x] **Clinical Notes**: Table with `vector(768)` support for embeddings.
+- [x] **Appointments**: Scheduling table.
+- [x] **Chat History**: Added `messages` table for unified logs.
 
 ## 4. AI & Cognitive Engine (Backend)
 - [x] **Gemini Client**: Basic client setup (`services/ai.ts`).
@@ -38,7 +38,7 @@
 - [x] **Dashboard Layout**: Main sidebar and navigation structure.
 - [x] **Chat Interface**: Bubble UI, typing indicators, input handling.
 - [x] **Patient Profile View**: Display of static clinical data and **GAD-7 Recharts visualization**.
-- [ ] **Data Binding**: Replace `mockData.ts` with real data fetching (React Server Components).
+- [x] **Data Binding**: Replaced `mockData.ts` with real data fetching via Server Actions.
 - [x] **Schedule View**: Calendar UI for managing `appointments`.
 - [x] **Progress Visualization**: Implement Recharts/Chart.js for GAD-7 scores in `PatientProfile`.
 

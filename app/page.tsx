@@ -7,10 +7,15 @@ import { ChatInterface } from '../components/ChatInterface';
 import { PatientProfile } from '../components/PatientProfile';
 import { ScheduleView } from '../components/ScheduleView';
 import { NotesView } from '../components/NotesView';
-import { StorageService } from '../services/storage';
+import { LoginScreen } from '../components/LoginScreen';
 import { generateMorningBriefing } from '../services/ai';
+import { getPatientProfile, getMessages, getClinicalNotes, getMyAppointments, saveMessage, updatePatientProfile } from './actions';
+import { Button } from '../components/ui/button';
 
 const App: React.FC = () => {
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
   const [state, setState] = useState<AppState>({
     view: 'DASHBOARD',
     isAwake: false,
@@ -24,18 +29,49 @@ const App: React.FC = () => {
   const [wakingUp, setWakingUp] = useState(false);
   const [briefing, setBriefing] = useState<string>("Wake me up to analyze the daily schedule.");
 
-  // Load Data on Mount
+  // 1. Check Auth
   useEffect(() => {
-    setMessages(StorageService.getMessages());
-    setProfile(StorageService.getProfile());
-    setNotes(StorageService.getNotes());
-    setAppointments(StorageService.getAppointments());
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (Object.keys(data).length > 0) {
+            setSession(data);
+        } else {
+            setLoading(false);
+        }
+      })
+      .catch(() => setLoading(false));
   }, []);
+
+  // 2. Load Data from DB (via Server Actions) when session exists
+  useEffect(() => {
+    async function loadData() {
+        if (!session) return;
+        
+        try {
+            const [fetchedProfile, fetchedMessages, fetchedNotes, fetchedAppointments] = await Promise.all([
+                getPatientProfile(),
+                getMessages(),
+                getClinicalNotes(),
+                getMyAppointments()
+            ]);
+
+            if (fetchedProfile) setProfile(fetchedProfile);
+            setMessages(fetchedMessages);
+            setNotes(fetchedNotes);
+            setAppointments(fetchedAppointments);
+        } catch (error) {
+            console.error("Failed to load clinical data:", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+    loadData();
+  }, [session]);
 
   const handleWakeUp = async () => {
     setWakingUp(true);
     
-    // Use AI to generate real briefing based on stored data
     if (profile) {
         const aiBriefing = await generateMorningBriefing(appointments, profile);
         setBriefing(aiBriefing);
@@ -47,8 +83,32 @@ const App: React.FC = () => {
     }, 1500);
   };
 
+  const handleSignOut = () => {
+      window.location.href = "/api/auth/signout";
+  };
+
+  // Callback to persist messages to DB
+  const handlePersistMessage = async (msg: Message) => {
+    setMessages(prev => [...prev, msg]); // Optimistic update
+    await saveMessage(msg); // Background save
+  };
+
+  // Callback to update profile in DB
+  const handleUpdateProfile = async (p: ClinicalProfile) => {
+      setProfile(p);
+      await updatePatientProfile(p);
+  };
+
+  if (loading) {
+      return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500">Loading Serenity AI...</div>;
+  }
+
+  if (!session) {
+      return <LoginScreen />;
+  }
+
   const renderContent = () => {
-    if (!profile) return <div>Loading...</div>;
+    if (!profile) return <div className="text-slate-500">Loading Patient Data...</div>;
 
     switch (state.view) {
       case 'CHAT':
@@ -56,8 +116,8 @@ const App: React.FC = () => {
             <ChatInterface 
                 messages={messages} 
                 profile={profile}
-                onSendMessage={(msg) => setMessages(prev => [...prev, msg])}
-                onUpdateProfile={(p) => setProfile(p)}
+                onSendMessage={handlePersistMessage}
+                onUpdateProfile={handleUpdateProfile}
             />
         );
       case 'PROFILE':
@@ -151,8 +211,7 @@ const App: React.FC = () => {
                   <span className="text-sm font-medium text-slate-200">Review Notes</span>
                 </button>
                 <button 
-                    onClick={() => StorageService.clearAll()}
-                    className="p-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-left transition-colors group"
+                    className="p-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl text-left transition-colors group opacity-50 cursor-not-allowed"
                 >
                   <div className="w-10 h-10 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <i className="fas fa-trash-alt"></i>
@@ -228,12 +287,20 @@ const App: React.FC = () => {
 
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3">
-            <img src="https://ui-avatars.com/api/?name=Dr+AI&background=10b981&color=fff" className="w-8 h-8 rounded-full" alt="Profile" />
-            <div className="flex-1">
-              <div className="text-sm font-medium text-slate-200">Dr. Serenity</div>
+            {session.user?.image ? (
+                <img src={session.user.image} className="w-8 h-8 rounded-full" alt="Profile" />
+            ) : (
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-slate-900 flex items-center justify-center font-bold">
+                    {session.user?.name?.[0] || 'D'}
+                </div>
+            )}
+            <div className="flex-1 overflow-hidden">
+              <div className="text-sm font-medium text-slate-200 truncate">{session.user?.name}</div>
               <div className="text-xs text-slate-500">v2.4.0 (Gemini Pro)</div>
             </div>
-            <i className="fas fa-cog text-slate-500 hover:text-slate-300 cursor-pointer"></i>
+            <button onClick={handleSignOut} className="text-slate-500 hover:text-red-400 cursor-pointer transition-colors" title="Sign Out">
+                <i className="fas fa-sign-out-alt"></i>
+            </button>
           </div>
         </div>
       </aside>
@@ -244,7 +311,7 @@ const App: React.FC = () => {
         <header className="h-16 bg-slate-900/50 backdrop-blur border-b border-slate-800 flex items-center justify-between px-8">
           <div className="flex items-center gap-4 text-sm text-slate-400">
              <span className="flex items-center gap-2">
-               <span className={`w-2 h-2 rounded-full ${state.isAwake ? 'bg-emerald-500' : 'bg-orange-500'}`}></span>
+               <span className={`w-2 h-2 rounded-full ${state.isAwake ? 'bg-emerald-500' : 'bg-emerald-500'}`}></span>
                {state.isAwake ? 'Agent Active' : 'Agent Sleeping'}
              </span>
              <span className="w-px h-4 bg-slate-700"></span>
