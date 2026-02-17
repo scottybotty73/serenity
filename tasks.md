@@ -4,6 +4,7 @@
 - [x] **Project Scaffolding**: Setup React/Next.js folder structure.
 - [x] **UI Component Library**: Tailwind CSS configuration and basic styling.
 - [x] **Component System**: Install Shadcn UI (Card, Button, Badge).
+- [x] **Next.js Migration**: Remove Vite artifacts (`index.html`, `vite.config.ts`, etc).
 - [ ] **Database Setup**: Initialize Neon (PostgreSQL) project.
 - [ ] **ORM Configuration**: Setup Drizzle ORM and define schema in code.
 - [ ] **Environment Variables**: Configure `.env` for API_KEY, DATABASE_URL, AUTH_SECRET.
@@ -22,7 +23,7 @@
 
 ## 4. AI & Cognitive Engine (Backend)
 - [x] **Gemini Client**: Basic client setup (`services/ai.ts`).
-- [ ] **Server Actions**: Move AI calls from client-side to Next.js Server Actions for security.
+- [x] **Server Actions**: Move AI calls from client-side to Next.js API Routes for security.
 - [ ] **RAG System**:
     - [ ] Implement embedding generation for past notes.
     - [ ] Create vector search utility to retrieve relevant context.

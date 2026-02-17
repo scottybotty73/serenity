@@ -1,8 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const THERAPIST_SYSTEM_PROMPT = (profile: any) => `
 You are Serenity, an expert AI Psychotherapist.
 Your goal is to provide evidence-based support using CBT and DBT techniques.
@@ -23,6 +21,15 @@ When responding, keep it concise (under 150 words) unless explaining a complex c
 
 export async function POST(request: Request) {
   try {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'API_KEY is missing in server environment variables.' },
+        { status: 500 }
+      );
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
     const body = await request.json();
     const { action } = body;
 

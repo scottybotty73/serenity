@@ -143,20 +143,20 @@ CREATE TABLE appointments (
 ## 5. Development Roadmap
 
 ### Phase 1: Foundation
-- [ ] Setup Next.js 16.1 & Neon DB.
+- [x] Setup Next.js 16.1 & Neon DB.
 - [ ] Implement Google Auth.
 - [ ] Integrate Telegram Bot Webhooks.
-- [ ] **Install & Configure Shadcn UI.**
+- [x] **Install & Configure Shadcn UI.**
 
 ### Phase 2: The Cognitive Engine
-- [ ] Integrate Gemini 3 Pro via Vercel AI SDK.
+- [x] Integrate Gemini 3 Pro via Vercel AI SDK (via API Route).
 - [ ] Build "Patient File Review" (RAG retrieval logic).
 - [ ] **Implement SOAP Note Summarizer (Background Job).**
 
 ### Phase 3: Agent Lifecycle (The "Wake Up")
 - [ ] Setup Inngest/Cron for the "Wake Up" event.
 - [ ] Implement scheduling logic to fetch daily appointments.
-- [ ] **Build Progress Dashboard (Chart.js/Recharts for GAD-7 scores).**
+- [x] **Build Progress Dashboard (Chart.js/Recharts for GAD-7 scores).**
 - [ ] **Implement Crisis Detection Guardrails.**
 
 ### Phase 4: Polish & Deployment
