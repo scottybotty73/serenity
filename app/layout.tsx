@@ -1,6 +1,7 @@
 import React from 'react';
 import { authClient } from '@/lib/auth/client';
-import { NeonAuthUIProvider, UserButton } from '@neondatabase/auth/react';
+import { NeonAuthUIProvider } from '@neondatabase/auth/react';
+import { ClientUserButton } from '@/components/ClientUserButton';
 import './globals.css';
 
 export const metadata = {
@@ -56,7 +57,7 @@ export default function RootLayout({
       <body>
         <NeonAuthUIProvider authClient={authClient} redirectTo="/account/settings" emailOTP>
           <header className="flex justify-end items-center p-4 gap-4 h-16">
-            <UserButton size="icon" />
+            <ClientUserButton />
           </header>
           <div id="root">{children}</div>
         </NeonAuthUIProvider>

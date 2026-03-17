@@ -1,70 +1,13 @@
 import { pgTable, serial, text, timestamp, jsonb, integer, vector, boolean, primaryKey } from 'drizzle-orm/pg-core';
 import { defineRelations as relations, One, Many } from 'drizzle-orm/relations';
-import { type AdapterAccount } from "next-auth/adapters";
 
-// 1. Users (Extended for NextAuth)
-export const users = pgTable('user', {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text("name"),
-  email: text("email").notNull().unique(),
-  emailVerified: timestamp("emailVerified", { mode: "date" }),
-  image: text("image"),
-  // Custom Serenity Fields
-  telegramChatId: text('telegram_chat_id'),
-  timezone: text('timezone').default('UTC'),
-  settings: jsonb('settings').default({}),
-  createdAt: timestamp('created_at').defaultNow(),
-});
+// Note: Neon Auth handles user authentication tables in neon_auth schema
+// We only define our custom application tables here
 
-// NextAuth: Accounts
-export const accounts = pgTable(
-  "account",
-  {
-    userId: text("userId")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").$type<AdapterAccount["type"]>().notNull(),
-    provider: text("provider").notNull(),
-    providerAccountId: text("providerAccountId").notNull(),
-    refresh_token: text("refresh_token"),
-    access_token: text("access_token"),
-    expires_at: integer("expires_at"),
-    token_type: text("token_type"),
-    scope: text("scope"),
-    id_token: text("id_token"),
-    session_state: text("session_state"),
-  },
-  (account) => ({
-    compoundKey: primaryKey({ columns: [account.provider, account.providerAccountId] }),
-  })
-);
-
-// NextAuth: Sessions
-export const sessions = pgTable("session", {
-  sessionToken: text("sessionToken").primaryKey(),
-  userId: text("userId")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  expires: timestamp("expires", { mode: "date" }).notNull(),
-});
-
-// NextAuth: Verification Tokens
-export const verificationTokens = pgTable(
-  "verificationToken",
-  {
-    identifier: text("identifier").notNull(),
-    token: text("token").notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
-  },
-  (vt) => ({
-    compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  })
-);
-
-// 2. Clinical Profile (The "Patient File")
+// 1. Clinical Profile (The "Patient File")
 export const patientProfile = pgTable('patient_profile', {
   id: serial('id').primaryKey(),
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: text('user_id').notNull(), // References neon_auth.user.id
   keyPeople: jsonb('key_people').default([]),
   medications: jsonb('medications').default([]),
   diagnoses: jsonb('diagnoses').default([]),
@@ -72,10 +15,10 @@ export const patientProfile = pgTable('patient_profile', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// 3. Clinical Notes (SOAP Format with Vectors)
+// 2. Clinical Notes (SOAP Format with Vectors)
 export const clinicalNotes = pgTable('clinical_notes', {
   id: serial('id').primaryKey(),
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: text('user_id').notNull(), // References neon_auth.user.id
   sessionDate: timestamp('session_date').defaultNow(),
   type: text('type').default('Follow-up'), // Initial, Follow-up, Crisis
   subjective: text('subjective'),
@@ -83,33 +26,33 @@ export const clinicalNotes = pgTable('clinical_notes', {
   assessment: text('assessment'),
   plan: text('plan'),
   summary: text('summary'),
-  summaryEmbedding: vector('summary_embedding', { dimensions: 768 }),
+  // summaryEmbedding: vector('summary_embedding', { dimensions: 768 }), // Temporarily disabled
 });
 
-// 4. Raw Messages (Unified Chat History)
+// 3. Raw Messages (Unified Chat History)
 export const messages = pgTable('messages', {
   id: serial('id').primaryKey(),
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: text('user_id').notNull(), // References neon_auth.user.id
   role: text('role').notNull(),
   content: text('content').notNull(),
   isCrisis: boolean('is_crisis').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// 5. Assessments
+// 4. Assessments
 export const assessments = pgTable('assessments', {
   id: serial('id').primaryKey(),
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: text('user_id').notNull(), // References neon_auth.user.id
   type: text('type').notNull(),
   score: integer('score').notNull(),
   answers: jsonb('answers').notNull(),
   administeredAt: timestamp('administered_at').defaultNow(),
 });
 
-// 6. Appointments
+// 5. Appointments
 export const appointments = pgTable('appointments', {
   id: serial('id').primaryKey(),
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: text('user_id').notNull(), // References neon_auth.user.id
   scheduledTime: timestamp('scheduled_time').notNull(),
   status: text('status').default('PENDING'),
   platform: text('platform').default('TELEGRAM'),
