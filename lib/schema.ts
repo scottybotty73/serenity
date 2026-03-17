@@ -26,7 +26,7 @@ export const clinicalNotes = pgTable('clinical_notes', {
   assessment: text('assessment'),
   plan: text('plan'),
   summary: text('summary'),
-  // summaryEmbedding: vector('summary_embedding', { dimensions: 768 }), // Temporarily disabled
+  summaryEmbedding: vector('summary_embedding', { dimensions: 768 }),
 });
 
 // 3. Raw Messages (Unified Chat History)
