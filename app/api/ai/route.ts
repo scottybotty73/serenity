@@ -52,7 +52,15 @@ export async function POST(request: Request) {
         });
 
         const result = await chat.sendMessage({ message: userMessage });
-        return NextResponse.json({ text: result.text });
+        
+        // Basic crisis detection
+        const crisisKeywords = ['suicide', 'kill myself', 'end it all', 'self-harm', 'hurt myself'];
+        const isCrisis = crisisKeywords.some(keyword => 
+            userMessage.toLowerCase().includes(keyword) || 
+            result.text.toLowerCase().includes(keyword)
+        );
+        
+        return NextResponse.json({ text: result.text, isCrisis });
     }
 
     // 2. SOAP Note Generation
@@ -72,7 +80,22 @@ export async function POST(request: Request) {
                 responseMimeType: "application/json"
             }
         });
-        return NextResponse.json({ text: response.text });
+        
+        const soapData = JSON.parse(response.text);
+        const summary = soapData.summary || '';
+        
+        // Generate embedding for the summary
+        const embeddingResponse = await ai.models.embedContent({
+            model: 'text-embedding-004',
+            contents: { parts: [{ text: summary }] }
+        });
+        
+        const embedding = embeddingResponse.embeddings?.[0]?.values || [];
+        
+        return NextResponse.json({ 
+            soap: soapData, 
+            embedding: embedding 
+        });
     }
 
     // 3. Profile Update

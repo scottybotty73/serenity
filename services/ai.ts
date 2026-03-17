@@ -16,7 +16,7 @@ const callAiApi = async (payload: any) => {
   return await response.json();
 };
 
-export const generateTherapistResponse = async (history: Message[], userMessage: string, profile: ClinicalProfile): Promise<string> => {
+export const generateTherapistResponse = async (history: Message[], userMessage: string, profile: ClinicalProfile): Promise<{text: string, isCrisis: boolean}> => {
   try {
     const data = await callAiApi({ 
       action: 'chat', 
@@ -24,10 +24,10 @@ export const generateTherapistResponse = async (history: Message[], userMessage:
       userMessage, 
       profile 
     });
-    return data.text || "I'm having trouble connecting to my cognitive core.";
+    return { text: data.text || "I'm having trouble connecting to my cognitive core.", isCrisis: data.isCrisis || false };
   } catch (error) {
     console.error("AI Service Error:", error);
-    return "I'm momentarily disconnected. Please try again.";
+    return { text: "I'm momentarily disconnected. Please try again.", isCrisis: false };
   }
 };
 
@@ -35,22 +35,21 @@ export const generateSOAPNote = async (messages: Message[]): Promise<ClinicalNot
   if (messages.length < 2) return null;
 
   try {
-    const { text } = await callAiApi({ 
+    const { soap, embedding } = await callAiApi({ 
       action: 'soap', 
       messages 
     });
     
-    const data = JSON.parse(text || '{}');
-    
     return {
       id: uuidv4(),
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      type: data.type || 'Follow-up',
-      subjective: data.subjective || '',
-      objective: data.objective || '',
-      assessment: data.assessment || '',
-      plan: data.plan || '',
-      summary: data.summary || ''
+      type: soap.type || 'Follow-up',
+      subjective: soap.subjective || '',
+      objective: soap.objective || '',
+      assessment: soap.assessment || '',
+      plan: soap.plan || '',
+      summary: soap.summary || '',
+      embedding: embedding
     };
   } catch (e) {
     console.error("SOAP Note Generation failed", e);
