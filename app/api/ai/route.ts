@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action } = body;
 
+    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'; // fallback
+
     // 1. Chat Response
     if (action === 'chat') {
         const { history, userMessage, profile } = body;
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
         }));
 
         const chat = ai.chats.create({
-            model: 'gemini-3-pro-preview',
+            model: model,
             history: historyContent,
             config: {
                 systemInstruction: THERAPIST_SYSTEM_PROMPT(profile),
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
         const transcript = messages.map((m: any) => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
         
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: model,
             contents: `Generate a clinical SOAP note (JSON format) for this therapy session transcript.
             
             Transcript:
@@ -104,7 +106,7 @@ export async function POST(request: Request) {
         const transcript = messages.slice(-10).map((m: any) => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
 
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: model,
             contents: `Analyze this recent conversation and update the clinical profile JSON.
             Only add NEW information. Do not remove existing valid data.
             
@@ -125,7 +127,7 @@ export async function POST(request: Request) {
     if (action === 'briefing') {
         const { appointments, profile } = body;
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: model,
             contents: `You are an AI assistant for a therapist. 
             Generate a short, 2-sentence morning status update for the dashboard.
             

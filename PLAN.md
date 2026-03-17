@@ -26,8 +26,8 @@
 
 ### 2.3 AI & Logic Layer
 - **Orchestrator:** Vercel AI SDK 4.0+
-- **Primary Model:** Google Gemini 3 Pro (via `@google/genai`)
-- **Fallback Models:** Llama 3.3 70B, Anthropic Claude 3.5 Sonnet.
+- **Primary Model:** Google Gemini (configurable via `GEMINI_MODEL` env var, default: Gemini 3.1 Flash Lite Preview)
+- **Fallback Models:** Gemini 2.0 Flash, Llama 3.3 70B, Anthropic Claude 3.5 Sonnet.
 - **Memory (RAG):** `pgvector` for semantic retrieval of past sessions during "Patient File Review."
 
 ## 3. Key Features
