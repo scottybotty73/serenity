@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { users, patientProfile, clinicalNotes, messages, appointments } from "@/lib/schema";
 import { eq, desc, asc } from "drizzle-orm";

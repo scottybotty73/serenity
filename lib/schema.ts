@@ -1,5 +1,5 @@
 import { pgTable, serial, text, timestamp, jsonb, integer, vector, boolean, primaryKey } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { defineRelations as relations, One, Many } from 'drizzle-orm/relations';
 import { type AdapterAccount } from "next-auth/adapters";
 
 // 1. Users (Extended for NextAuth)
@@ -117,19 +117,19 @@ export const appointments = pgTable('appointments', {
 });
 
 // Relationships
-export const usersRelations = relations(users, ({ one, many }) => ({
-  profile: one(patientProfile, {
-    fields: [users.id],
-    references: [patientProfile.userId],
-  }),
-  notes: many(clinicalNotes),
-  messages: many(messages),
-  appointments: many(appointments),
-}));
+// export const usersRelations = relations(users, {
+//   profile: One(patientProfile, {
+//     fields: [users.id],
+//     references: [patientProfile.userId],
+//   }),
+//   notes: Many(clinicalNotes),
+//   messages: Many(messages),
+//   appointments: Many(appointments),
+// });
 
-export const profileRelations = relations(patientProfile, ({ one }) => ({
-  user: one(users, {
-    fields: [patientProfile.userId],
-    references: [users.id],
-  }),
-}));
+// export const profileRelations = relations(patientProfile, {
+//   user: One(users, {
+//     fields: [patientProfile.userId],
+//     references: [users.id],
+//   }),
+// });

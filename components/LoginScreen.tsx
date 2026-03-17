@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import Link from 'next/link';
 
 export const LoginScreen = () => {
   return (
@@ -17,25 +18,17 @@ export const LoginScreen = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <form
-              action={async () => {
-                // In a server component we would use "use server", but we'll call the API from the client for now or redirect
-                // Since this component is used in a Client Component (App), we can simply link to the signin endpoint or use the button
-                // However, standard NextAuth v5 client way:
-                window.location.href = "/api/auth/signin";
-              }}
-            >
-              <Button className="w-full h-12 text-base bg-white text-slate-900 hover:bg-slate-100 transition-all font-semibold flex items-center gap-3">
-                <img src="https://authjs.dev/img/providers/google.svg" className="w-5 h-5" alt="Google" />
-                Sign in with Google
-              </Button>
-            </form>
+          <Link href="/auth/sign-in">
+            <Button className="w-full h-12 text-base bg-white text-slate-900 hover:bg-slate-100 transition-all font-semibold">
+              Sign in
+            </Button>
+          </Link>
             
-            <div className="mt-8 text-center">
-                <p className="text-xs text-slate-600">
-                    Restricted Access. HIPAA Compliant System.
-                </p>
-            </div>
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-600">
+              Restricted Access. HIPAA Compliant System.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
