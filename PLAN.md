@@ -13,7 +13,7 @@
 - **Hosting:** Vercel (Serverless Functions)
 - **Database:** Neon (Serverless PostgreSQL)
 - **ORM:** Drizzle ORM
-- **Authentication:** NextAuth.js v5 (Google Provider)
+- **Authentication:** Neon Auth (Google Provider)
 
 ### 2.2 Agent Infrastructure (The "Active" Layer)
 - **Scheduling & Queues:** Inngest or Vercel Cron/QStash

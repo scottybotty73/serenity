@@ -10,7 +10,7 @@
 - [x] **Environment Variables**: Instructions added.
 
 ## 2. Authentication & User Management
-- [x] **NextAuth Setup**: Configure Google Provider (v5) and Drizzle Adapter.
+- [x] **Neon Auth Setup**: Configure Google Provider and Drizzle Adapter.
 - [x] **Protected Routes**: Client-side session check implemented in `App`.
 - [x] **User Onboarding**: Auto-seed Mock Data for new users via Server Actions.
 
