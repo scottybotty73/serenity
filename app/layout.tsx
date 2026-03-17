@@ -1,4 +1,8 @@
 import React from 'react';
+import { authClient } from '@/lib/auth/client';
+import { NeonAuthUIProvider } from '@neondatabase/auth/react';
+import { ClientUserButton } from '@/components/ClientUserButton';
+import './globals.css';
 
 export const metadata = {
   title: 'Serenity AI',
@@ -51,7 +55,12 @@ export default function RootLayout({
         }} />
       </head>
       <body>
-        <div id="root">{children}</div>
+        <NeonAuthUIProvider authClient={authClient} redirectTo="/account/settings" emailOTP>
+          <header className="flex justify-end items-center p-4 gap-4 h-16">
+            <ClientUserButton />
+          </header>
+          <div id="root">{children}</div>
+        </NeonAuthUIProvider>
       </body>
     </html>
   );
