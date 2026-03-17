@@ -37,6 +37,7 @@ export interface ClinicalNote {
   assessment: string;
   plan: string;
   summary: string;
+  embedding?: number[];
 }
 
 export interface AppState {

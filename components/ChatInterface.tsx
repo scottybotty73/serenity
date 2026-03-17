@@ -65,13 +65,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, profile,
     await onSendMessage(userMsg);
 
     try {
-      const responseText = await generateTherapistResponse(messages.concat(userMsg), input, profile);
+      const { text: responseText, isCrisis } = await generateTherapistResponse(messages.concat(userMsg), input, profile);
+      userMsg.isCrisis = isCrisis; // Set if crisis detected
       
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
         content: responseText,
-        timestamp: new Date()
+        timestamp: new Date(),
+        isCrisis
       };
       
       // Save AI Message

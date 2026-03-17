@@ -150,14 +150,14 @@ CREATE TABLE appointments (
 
 ### Phase 2: The Cognitive Engine
 - [x] Integrate Gemini 3 Pro via Vercel AI SDK (via API Route).
-- [ ] Build "Patient File Review" (RAG retrieval logic).
-- [ ] **Implement SOAP Note Summarizer (Background Job).**
+- [x] Build "Patient File Review" (RAG retrieval logic).
+- [x] **Implement SOAP Note Summarizer (Background Job).**
 
 ### Phase 3: Agent Lifecycle (The "Wake Up")
-- [ ] Setup Inngest/Cron for the "Wake Up" event.
-- [ ] Implement scheduling logic to fetch daily appointments.
+- [x] Setup Inngest/Cron for the "Wake Up" event.
+- [x] Implement scheduling logic to fetch daily appointments.
 - [x] **Build Progress Dashboard (Chart.js/Recharts for GAD-7 scores).**
-- [ ] **Implement Crisis Detection Guardrails.**
+- [x] **Implement Crisis Detection Guardrails.**
 
 ### Phase 4: Polish & Deployment
 - [ ] Build Dashboard for setting schedules/time slots.

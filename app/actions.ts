@@ -151,7 +151,8 @@ export async function saveClinicalNote(note: ClinicalNote) {
         objective: note.objective,
         assessment: note.assessment,
         plan: note.plan,
-        summary: note.summary
+        summary: note.summary,
+        summaryEmbedding: note.embedding
     });
     revalidatePath('/');
 }
