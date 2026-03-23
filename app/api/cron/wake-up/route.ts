@@ -34,7 +34,7 @@ export async function GET() {
     // For each appointment, "wake up" and prepare
     // In real implementation, send Telegram message or email
     for (const appt of todaysAppointments) {
-      console.log(`Waking up for appointment: ${appt.id} with ${appt.profile?.name || 'Patient'}`);
+      console.log(`Waking up for appointment: ${appt.id} with ${appt.profile?.userId || 'Patient'}`);
       
       // TODO: Send proactive message via Telegram/Email
       // TODO: Run psychology news grounding
