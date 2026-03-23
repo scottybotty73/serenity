@@ -13,7 +13,7 @@
 - **Hosting:** Vercel (Serverless Functions)
 - **Database:** Neon (Serverless PostgreSQL)
 - **ORM:** Drizzle ORM
-- **Authentication:** NextAuth.js v5 (Google Provider)
+- **Authentication:** Neon Auth (Google Provider)
 
 ### 2.2 Agent Infrastructure (The "Active" Layer)
 - **Scheduling & Queues:** Inngest or Vercel Cron/QStash
@@ -26,8 +26,8 @@
 
 ### 2.3 AI & Logic Layer
 - **Orchestrator:** Vercel AI SDK 4.0+
-- **Primary Model:** Google Gemini 3 Pro (via `@google/genai`)
-- **Fallback Models:** Llama 3.3 70B, Anthropic Claude 3.5 Sonnet.
+- **Primary Model:** Google Gemini (configurable via `GEMINI_MODEL` env var, default: Gemini 3.1 Flash Lite Preview)
+- **Fallback Models:** Gemini 2.0 Flash, Llama 3.3 70B, Anthropic Claude 3.5 Sonnet.
 - **Memory (RAG):** `pgvector` for semantic retrieval of past sessions during "Patient File Review."
 
 ## 3. Key Features
@@ -150,14 +150,14 @@ CREATE TABLE appointments (
 
 ### Phase 2: The Cognitive Engine
 - [x] Integrate Gemini 3 Pro via Vercel AI SDK (via API Route).
-- [ ] Build "Patient File Review" (RAG retrieval logic).
-- [ ] **Implement SOAP Note Summarizer (Background Job).**
+- [x] Build "Patient File Review" (RAG retrieval logic).
+- [x] **Implement SOAP Note Summarizer (Background Job).**
 
 ### Phase 3: Agent Lifecycle (The "Wake Up")
-- [ ] Setup Inngest/Cron for the "Wake Up" event.
-- [ ] Implement scheduling logic to fetch daily appointments.
+- [x] Setup Inngest/Cron for the "Wake Up" event.
+- [x] Implement scheduling logic to fetch daily appointments.
 - [x] **Build Progress Dashboard (Chart.js/Recharts for GAD-7 scores).**
-- [ ] **Implement Crisis Detection Guardrails.**
+- [x] **Implement Crisis Detection Guardrails.**
 
 ### Phase 4: Polish & Deployment
 - [ ] Build Dashboard for setting schedules/time slots.

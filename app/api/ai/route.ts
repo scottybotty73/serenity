@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action } = body;
 
+    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'; // fallback
+
     // 1. Chat Response
     if (action === 'chat') {
         const { history, userMessage, profile } = body;
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
         }));
 
         const chat = ai.chats.create({
-            model: 'gemini-3-pro-preview',
+            model: model,
             history: historyContent,
             config: {
                 systemInstruction: THERAPIST_SYSTEM_PROMPT(profile),
@@ -52,7 +54,15 @@ export async function POST(request: Request) {
         });
 
         const result = await chat.sendMessage({ message: userMessage });
-        return NextResponse.json({ text: result.text });
+        
+        // Basic crisis detection
+        const crisisKeywords = ['suicide', 'kill myself', 'end it all', 'self-harm', 'hurt myself'];
+        const isCrisis = crisisKeywords.some(keyword => 
+            userMessage.toLowerCase().includes(keyword) || 
+            result.text.toLowerCase().includes(keyword)
+        );
+        
+        return NextResponse.json({ text: result.text, isCrisis });
     }
 
     // 2. SOAP Note Generation
@@ -61,7 +71,7 @@ export async function POST(request: Request) {
         const transcript = messages.map((m: any) => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
         
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: model,
             contents: `Generate a clinical SOAP note (JSON format) for this therapy session transcript.
             
             Transcript:
@@ -72,7 +82,22 @@ export async function POST(request: Request) {
                 responseMimeType: "application/json"
             }
         });
-        return NextResponse.json({ text: response.text });
+        
+        const soapData = JSON.parse(response.text);
+        const summary = soapData.summary || '';
+        
+        // Generate embedding for the summary
+        const embeddingResponse = await ai.models.embedContent({
+            model: 'text-embedding-004',
+            contents: { parts: [{ text: summary }] }
+        });
+        
+        const embedding = embeddingResponse.embeddings?.[0]?.values || [];
+        
+        return NextResponse.json({ 
+            soap: soapData, 
+            embedding: embedding 
+        });
     }
 
     // 3. Profile Update
@@ -81,7 +106,7 @@ export async function POST(request: Request) {
         const transcript = messages.slice(-10).map((m: any) => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
 
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: model,
             contents: `Analyze this recent conversation and update the clinical profile JSON.
             Only add NEW information. Do not remove existing valid data.
             
@@ -102,7 +127,7 @@ export async function POST(request: Request) {
     if (action === 'briefing') {
         const { appointments, profile } = body;
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: model,
             contents: `You are an AI assistant for a therapist. 
             Generate a short, 2-sentence morning status update for the dashboard.
             

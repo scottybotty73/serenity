@@ -1,0 +1,1 @@
+ALTER TABLE "clinical_notes" ADD COLUMN "summary_embedding" vector(768);

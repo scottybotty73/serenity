@@ -10,7 +10,7 @@
 - [x] **Environment Variables**: Instructions added.
 
 ## 2. Authentication & User Management
-- [x] **NextAuth Setup**: Configure Google Provider (v5) and Drizzle Adapter.
+- [x] **Neon Auth Setup**: Configure Google Provider and Drizzle Adapter.
 - [x] **Protected Routes**: Client-side session check implemented in `App`.
 - [x] **User Onboarding**: Auto-seed Mock Data for new users via Server Actions.
 
@@ -25,14 +25,14 @@
 - [x] **Gemini Client**: Basic client setup (`services/ai.ts`).
 - [x] **Server Actions**: Move AI calls from client-side to Next.js API Routes for security.
 - [ ] **RAG System**:
-    - [ ] Implement embedding generation for past notes.
-    - [ ] Create vector search utility to retrieve relevant context.
+    - [x] Implement embedding generation for past notes.
+    - [x] Create vector search utility to retrieve relevant context.
 - [ ] **SOAP Note Generator**:
-    - [ ] Create specialized prompt for summarizing sessions.
+    - [x] Create specialized prompt for summarizing sessions.
     - [ ] Build background job (Cron/Inngest) to process completed sessions.
 - [ ] **Safety Guardrails**:
-    - [ ] Refine `HarmBlockThreshold` settings.
-    - [ ] Implement post-processing check for crisis keywords.
+    - [x] Refine `HarmBlockThreshold` settings.
+    - [x] Implement post-processing check for crisis keywords.
 
 ## 5. Frontend Development
 - [x] **Dashboard Layout**: Main sidebar and navigation structure.
@@ -50,9 +50,9 @@
 - [ ] **Email Service**: Setup Resend for daily summaries.
 
 ## 7. The "Wake Up" Routine (Agent Lifecycle)
-- [ ] **Scheduler**: Setup Vercel Cron or Inngest.
+- [x] **Scheduler**: Setup Vercel Cron or Inngest.
 - [ ] **Morning Logic**:
-    - [ ] Query daily appointments.
+    - [x] Query daily appointments.
     - [ ] Run "Psychology News" grounding search.
     - [ ] Generate "Daily Briefing" for the therapist dashboard.
 
