@@ -7,6 +7,7 @@ import { defineRelations as relations, One, Many } from 'drizzle-orm/relations';
 // 1. Clinical Profile (The "Patient File")
 export const patientProfile = pgTable('patient_profile', {
   id: serial('id').primaryKey(),
+  // name: text('name').notNull(),
   userId: text('user_id').notNull(), // References neon_auth.user.id
   keyPeople: jsonb('key_people').default([]),
   medications: jsonb('medications').default([]),
