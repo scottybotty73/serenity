@@ -1,23 +1,17 @@
 'use server';
 
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { patientProfile, clinicalNotes, messages, appointments } from "@/lib/schema";
+import { users, patientProfile, clinicalNotes, messages, appointments } from "@/lib/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { MOCK_PROFILE, MOCK_APPOINTMENTS, MOCK_NOTES, INITIAL_MESSAGES } from "@/mockData";
 import { ClinicalProfile, Message, ClinicalNote, Appointment } from "@/types";
 
-// Helper to get current user session or throw
-async function getUserSession() {
-  const { data: session } = await auth.getSession();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  return session;
-}
-
 // Helper to get current user ID or throw
 async function getUserId() {
-  const session = await getUserSession();
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
   return session.user.id;
 }
 
@@ -26,10 +20,9 @@ async function getUserId() {
 export async function getPatientProfile(): Promise<ClinicalProfile | null> {
   const userId = await getUserId();
   
-  const profile = await db.select().from(patientProfile)
-    .where(eq(patientProfile.userId, userId))
-    .limit(1)
-    .then(rows => rows[0]);
+  const profile = await db.query.patientProfile.findFirst({
+    where: eq(patientProfile.userId, userId),
+  });
 
   if (!profile) {
     // SEED DATA: If no profile exists, create one from MOCK_PROFILE for the demo
@@ -48,9 +41,8 @@ export async function getPatientProfile(): Promise<ClinicalProfile | null> {
   }
 
   // Map DB result to ClinicalProfile type
-  const session = await getUserSession();
   return {
-    name: session.user.name || 'Patient',
+    name: (await db.query.users.findFirst({ where: eq(users.id, userId) }))?.name || 'Patient',
     age: 32, // Hardcoded for now, or store DOB in users
     diagnosis: (profile.diagnoses as string[]) || [],
     medications: (profile.medications as string[]) || [],
@@ -78,9 +70,10 @@ export async function updatePatientProfile(profile: ClinicalProfile) {
 export async function getMessages(): Promise<Message[]> {
   const userId = await getUserId();
   
-  const dbMessages = await db.select().from(messages)
-    .where(eq(messages.userId, userId))
-    .orderBy(asc(messages.createdAt));
+  const dbMessages = await db.query.messages.findMany({
+    where: eq(messages.userId, userId),
+    orderBy: [asc(messages.createdAt)],
+  });
 
   if (dbMessages.length === 0) {
     // SEED: Insert initial message
@@ -98,7 +91,7 @@ export async function getMessages(): Promise<Message[]> {
   return dbMessages.map(m => ({
     id: m.id.toString(),
     role: m.role as 'user' | 'model',
-    content: m.content as string,
+    content: m.content,
     timestamp: m.createdAt || new Date(),
     isCrisis: m.isCrisis || false
   }));
@@ -119,9 +112,10 @@ export async function saveMessage(message: Message) {
 
 export async function getClinicalNotes(): Promise<ClinicalNote[]> {
     const userId = await getUserId();
-    const notes = await db.select().from(clinicalNotes)
-        .where(eq(clinicalNotes.userId, userId))
-        .orderBy(desc(clinicalNotes.sessionDate));
+    const notes = await db.query.clinicalNotes.findMany({
+        where: eq(clinicalNotes.userId, userId),
+        orderBy: [desc(clinicalNotes.sessionDate)]
+    });
 
     if (notes.length === 0) {
         // Seed Notes logic could go here, but let's leave notes empty or rely on client mock fallback if strictly needed
@@ -133,11 +127,11 @@ export async function getClinicalNotes(): Promise<ClinicalNote[]> {
         id: n.id.toString(),
         date: n.sessionDate ? new Date(n.sessionDate).toLocaleDateString() : '',
         type: (n.type as any) || 'Follow-up',
-        subjective: (n.subjective as string) || '',
-        objective: (n.objective as string) || '',
-        assessment: (n.assessment as string) || '',
-        plan: (n.plan as string) || '',
-        summary: (n.summary as string) || ''
+        subjective: n.subjective || '',
+        objective: n.objective || '',
+        assessment: n.assessment || '',
+        plan: n.plan || '',
+        summary: n.summary || ''
     }));
 }
 
@@ -151,8 +145,7 @@ export async function saveClinicalNote(note: ClinicalNote) {
         objective: note.objective,
         assessment: note.assessment,
         plan: note.plan,
-        summary: note.summary,
-        summaryEmbedding: note.embedding
+        summary: note.summary
     });
     revalidatePath('/');
 }
@@ -161,9 +154,10 @@ export async function saveClinicalNote(note: ClinicalNote) {
 
 export async function getMyAppointments(): Promise<Appointment[]> {
     const userId = await getUserId();
-    const apps = await db.select().from(appointments)
-        .where(eq(appointments.userId, userId))
-        .orderBy(asc(appointments.scheduledTime));
+    const apps = await db.query.appointments.findMany({
+        where: eq(appointments.userId, userId),
+        orderBy: [asc(appointments.scheduledTime)]
+    });
 
     if (apps.length === 0) {
         // Seed Appointments
